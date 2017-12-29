@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>贪吃蛇</title>
+    <style media="screen">
+    </style>
+  </head>
+  <body>
+
+  </body>
+  <script type="text/javascript">
+    function log(obj){
+      console.log(obj);
+    }
+
+    function Map(width, height){
+      this.id = 'map';
+      this.width = width;
+      this.height = height;
+      this.backgroundImage = "url(background1.jpg)";
+      this.show = function(){
+        var map = document.createElement('div');
+        map.style.width = this.width + "px";
+        map.style.height = this.height + 'px';
+        map.style.backgroundImage = this.backgroundImage;
+        map.id = this.id;
+        map.style.position = "relative";
+        document.body.appendChild(map);
+      }
+    }
+
+    function Snake(mapObj, foodObj){
+      this.width =20;
+      this.height = 20;
+      this.headColor = 'red';
+      this.direction = 'right';
+      this.snakeBody = [[0, 0], [1, 0], [2, 0], [3, 0]];
+      this.lastSnakeBody = [[0, 0], [1, 0], [2, 0], [3, 0]];
+      this.score = 0;
+      this.initsnake = function(){
+        this.score++;
+        for (var i = 0; i < this.snakeBody.length; i++) {
+          var subsnake = document.createElement('div');
+          subsnake.id = 's' + this.snakeBody[i][0] + this.snakeBody[i][1];
+          subsnake.style.width = this.width + 'px';
+          subsnake.style.height = this.height + 'px';
+          subsnake.style.position = 'absolute';
+          subsnake.style.left = this.snakeBody[i][0] * 20  + 'px';
+          subsnake.style.top = this.snakeBody[i][1] * 20  + 'px';
+          if (i == this.snakeBody.length - 1) {
+            subsnake.style.backgroundColor = this.headColor;
+          }else{
+            var red = Math.floor(Math.random() * 256);
+            var green = Math.floor(Math.random() * 256);
+            var blue = Math.floor(Math.random() * 256);
+            var color = "rgb("+red+","+green+","+blue+")";
+            this.bodyColor = color;
+            subsnake.style.backgroundColor = this.bodyColor;
+          }
+          document.getElementById(mapObj.id).appendChild(subsnake);
+        }
+      }
+
+      this.turnDirection = function(evt){
+        direction = evt.keyCode;
+        switch (direction) {
+          //右
+          case 39:
+          if(this.direction != 'left'){
+            this.direction = 'right';
+          }
+
+            break;
+          //左
+          case 37:
+          if(this.direction != 'right'){
+            this.direction = 'left';
+          }
+            break;
+          //上
+          case 38:
+          if (this.direction != 'down') {
+            this.direction = 'up';
+          }
+
+            break;
+          //下
+          case 40:
+          if (this.direction != 'up') {
+            this.direction = 'down';
+          }
+            break;
+        }
+      }
+
+    this.move = function(){
+      var nowLastIndex = this.snakeBody.length - 1;
+      var nowLastX = this.snakeBody[nowLastIndex][0];
+      var nowLastY = this.snakeBody[nowLastIndex][1];
+
+      for (var i = 0; i < this.lastSnakeBody.length; i++) {
+        var id = 's' + this.lastSnakeBody[i][0] + this.lastSnakeBody[i][1];
+        var subsnake = document.getElementById(id);
+        document.getElementById(mapObj.id).removeChild(subsnake);
+      }
+
+      var moveRightX = (nowLastX + 1) % (mapObj.width / 20);
+      var moveLeftX = (nowLastX - 1 + mapObj.width / 20) % (mapObj.width / 20);
+      var moveUpY = (nowLastY - 1 + mapObj.height / 20) % (mapObj.height / 20);
+      var moveDownY = (nowLastY + 1) % (mapObj.height / 20);
+
+      switch (this.direction) {
+        case 'right':
+        this.snakeBody.push([moveRightX, nowLastY]);
+          break;
+        case 'left':
+        this.snakeBody.push([moveLeftX, nowLastY]);
+          break;
+        case 'up':
+        this.snakeBody.push([nowLastX, moveUpY]);
+          break;
+        case 'down':
+        this.snakeBody.push([nowLastX, moveDownY]);
+          break;
+      }
+
+      var lost = this.snakeBody.shift();
+      this.initsnake();
+
+      // if (this.eatSelf(this.snakeBody)) {
+      //   alert('Game Over: 吃到了自己\n分数：'+score+'分');
+      //   location.reload();
+      // }
+
+      for (var i = 0; i < this.snakeBody.length; i++) {
+        this.lastSnakeBody[i] = this.snakeBody[i];
+      }
+
+      this.head = this.snakeBody[this.snakeBody.length - 1];
+
+      if (this.head[0] == foodObj.x && this.head[1] == foodObj.y) {
+        this.snakeBody.unshift(lost);
+        var food = document.getElementById(foodObj.id)
+        document.getElementById(mapObj.id).removeChild(food);
+        foodObj.show();
+      }
+
+      //自动吃食物
+      if (this.head[0] < foodObj.x) {
+        this.direction = 'right';
+      }else if (this.head[0] > foodObj.x) {
+        this.direction = 'left';
+      }else if (this.head[1] > foodObj.y) {
+        this.direction = 'up';
+      }else{
+        this.direction = 'down';
+      }
+
+      return this.snakeBody.length;
+    }
+
+    this.eatSelf = function(arr){
+      var head = arr[arr.length - 1];
+      for (var i = 0; i < arr.length - 1; i++) {
+        if (arr[i][0] == head[0] && arr[i][1] == head[1]) {
+          return true;
+        }
+      }
+    }
+
+    }
+
+    function Food(mapObj){
+
+      this.width = 20;
+      this.height = 20;
+      this.backgroundColor = 'green';
+      this.show = function(){
+        this.x = Math.floor(Math.random() * (mapObj.width / this.width));
+        this.y = Math.floor(Math.random() * (mapObj.height / this.height));
+        var food = document.createElement('div');
+        this.id = 'f' + this.x + this.y;
+        food.id = this.id;
+        food.style.width = this.width + 'px';
+        food.style.height = this.height + 'px';
+        food.style.position = "absolute";
+        food.style.left = this.x * 20 + 'px';
+        food.style.top = this.y * 20 + 'px';
+        // console.log(this.backgroundColor);
+        food.style.backgroundColor = this.backgroundColor;
+        document.getElementById(mapObj.id).appendChild(food);
+      }
+    }
+
+  // console.log([1, 2] == [1, 2]);
+
+    var mapObj = new Map(1900, 900);
+    var foodObj = new Food(mapObj);
+    var snakeObj = new Snake(mapObj, foodObj);
+    mapObj.show();
+    foodObj.show();
+    snakeObj.initsnake();
+
+    var moveSpeed = 300;
+    var snakeMove = function(speed){
+      var move = setInterval(function(){
+      length = snakeObj.move();
+      clearInterval(move);
+      snakeMove(moveSpeed / length * 5);
+      // snakeMove(moveSpeed);
+    }, speed);
+  }
+  snakeMove(moveSpeed);
+  var score = 0;
+  setInterval(function(){score++;}, 1000);
+
+    document.addEventListener('keydown', function(event){
+      snakeObj.turnDirection(event);
+    });
+
+  </script>
+</html>
